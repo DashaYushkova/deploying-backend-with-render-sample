@@ -31,14 +31,16 @@ async function getRandomActivity() {
 app.get('/insert_activity', async (req, res) => {
   try {
     const client = await pool.connect();
-    const activityName = await getRandomActivity();
+    const { customActivity } = req.query; // Retrieve custom activity from query parameters
+
+    const activityName = customActivity || await getRandomActivity(); // Use custom activity if provided, else fetch random activity
 
     if (activityName) {
       await client.query('INSERT INTO my_activities (activity) VALUES ($1)', [activityName]);
       client.release();
       res.status(200).json({ status: 'success', message: `Activity "${activityName}" inserted successfully` });
     } else {
-      res.status(400).json({ status: 'error', message: 'Unable to generate an activity from BoredAPI' });
+      res.status(400).json({ status: 'error', message: 'Unable to generate or insert an activity' });
     }
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
